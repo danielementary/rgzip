@@ -1,16 +1,18 @@
 use std::env;
-use std::fs;
+use std::process;
+
+use rgzip::Config;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    let filename = &args[1];
-    let bytes = fs::read(filename).expect("Something went wrong reading the file");
+    let config = Config::new(&args).unwrap_or_else(|err| {
+        println!("Problem parsing arguments: {}", err);
+        process::exit(1);
+    });
 
-    println!("Compressing file {}", filename);
-
-    println!("With bytes:");
-    for byte in bytes.iter() {
-        println!("\t{:#010b}", byte);
+    if let Err(e) = rgzip::run(config) {
+        println!("Application error: {}", e);
+        process::exit(1);
     }
 }
