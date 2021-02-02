@@ -11,7 +11,7 @@ fn main() {
         process::exit(1);
     });
 
-    if let Err(e) = rgzip::run(config) {
+    if let Err(e) = config.run() {
         println!("Application error: {}", e);
         process::exit(1);
     }

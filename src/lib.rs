@@ -3,6 +3,12 @@ use std::fs;
 
 pub struct Config {
     filename: String,
+    mode: Mode,
+}
+
+enum Mode {
+    Compression,
+    Decompression,
 }
 
 impl Config {
@@ -12,13 +18,55 @@ impl Config {
         }
 
         let filename = args[1].clone();
+        let mode = {
+            if get_file_extension(&filename) == String::from("rgz") {
+                Mode::Decompression
+            } else {
+                Mode::Compression
+            }
+        };
 
-        Ok(Config { filename })
+        Ok(Config {
+            filename: filename,
+            mode: mode,
+        })
+    }
+
+    pub fn run(self) -> Result<(), Box<dyn Error>> {
+        match self.mode {
+            Mode::Compression => compress(self),
+            Mode::Decompression => decompress(self),
+        }
     }
 }
 
+fn get_file_extension(filename: &String) -> String {
+    filename
+        .split(".")
+        .last()
+        .unwrap_or(&String::from(""))
+        .to_string()
+}
+
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    println!("Compressing file {}", config.filename);
+    config.run()
+}
+
+fn compress(config: Config) -> Result<(), Box<dyn Error>> {
+    println!("About to compress file {}", config.filename);
+
+    let bytes = fs::read(config.filename)?;
+
+    println!("With bytes:");
+    for byte in bytes.iter() {
+        println!("\t{:#010b}", byte);
+    }
+
+    Ok(())
+}
+
+fn decompress(config: Config) -> Result<(), Box<dyn Error>> {
+    println!("About to decompress file {}", config.filename);
 
     let bytes = fs::read(config.filename)?;
 
