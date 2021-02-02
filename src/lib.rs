@@ -83,7 +83,7 @@ impl Huffman_node {
     fn decode<'a>(&self, bits: &'a mut Bits) -> (i32, &'a Bits) {
         match self {
             Huffman_node::Inode(left_child, right_child) => {
-                let current_bit = bits.pop_front().unwrap();
+                let current_bit = bits.pop_front().expect("Not enough bits for decode");
                 let child = match current_bit {
                     Zero => left_child,
                     One => right_child,
