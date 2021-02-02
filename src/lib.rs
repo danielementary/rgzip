@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use std::error::Error;
 use std::fs;
 
@@ -64,4 +65,33 @@ fn decompress(config: Config) -> Result<(), Box<dyn Error>> {
     println!("Decompression in not implemented yet");
 
     Ok(())
+}
+
+enum Huffman_node {
+    Inode(Box<Huffman_node>, Box<Huffman_node>),
+    Lnode(i32),
+}
+
+enum Bit {
+    Zero,
+    One,
+}
+
+type Bits = VecDeque<Bit>;
+
+impl Huffman_node {
+    fn decode<'a>(&self, bits: &'a mut Bits) -> (i32, &'a Bits) {
+        match self {
+            Huffman_node::Inode(left_child, right_child) => {
+                let current_bit = bits.pop_front().unwrap();
+                let child = match current_bit {
+                    Zero => left_child,
+                    One => right_child,
+                };
+
+                child.decode(bits)
+            }
+            Huffman_node::Lnode(value) => (*value, bits),
+        }
+    }
 }
