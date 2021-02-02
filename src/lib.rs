@@ -43,7 +43,7 @@ fn has_compressed_file_extension(filename: &str) -> bool {
     let len = filename.len();
     let ext_len = COMPRESSED_FILE_EXTENSION.len();
 
-    filename[len - ext_len..] == *COMPRESSED_FILE_EXTENSION
+    filename[len - ext_len..] == COMPRESSED_FILE_EXTENSION.to_string()
 }
 
 fn compress(config: Config) -> Result<(), Box<dyn Error>> {
