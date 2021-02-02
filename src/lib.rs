@@ -28,10 +28,7 @@ impl Config {
             }
         };
 
-        Ok(Config {
-            filename: filename,
-            mode: mode,
-        })
+        Ok(Config { filename, mode })
     }
 
     pub fn run(self) -> Result<(), Box<dyn Error>> {
