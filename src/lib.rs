@@ -1,6 +1,8 @@
 use std::error::Error;
 use std::fs;
 
+const COMPRESSED_FILE_EXTENSION: &str = ".rgz";
+
 pub struct Config {
     filename: String,
     mode: Mode,
@@ -19,7 +21,7 @@ impl Config {
 
         let filename = args[1].clone();
         let mode = {
-            if get_file_extension(&filename) == String::from("rgz") {
+            if has_compressed_file_extension(&filename) {
                 Mode::Decompression
             } else {
                 Mode::Compression
@@ -40,16 +42,11 @@ impl Config {
     }
 }
 
-fn get_file_extension(filename: &String) -> String {
-    filename
-        .split(".")
-        .last()
-        .unwrap_or(&String::from(""))
-        .to_string()
-}
+fn has_compressed_file_extension(filename: &str) -> bool {
+    let len = filename.len();
+    let ext_len = COMPRESSED_FILE_EXTENSION.len();
 
-pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    config.run()
+    filename[len - ext_len..] == *COMPRESSED_FILE_EXTENSION
 }
 
 fn compress(config: Config) -> Result<(), Box<dyn Error>> {
