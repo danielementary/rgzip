@@ -51,9 +51,9 @@ fn compress(config: Config) -> Result<(), Box<dyn Error>> {
 
     let bytes = fs::read(config.filename)?;
 
-    println!("With bytes:");
+    print!("With bytes: ");
     for byte in bytes.iter() {
-        println!("\t{:#010b}", byte);
+        print!("{:#04X} ", byte);
     }
 
     Ok(())
@@ -61,13 +61,7 @@ fn compress(config: Config) -> Result<(), Box<dyn Error>> {
 
 fn decompress(config: Config) -> Result<(), Box<dyn Error>> {
     println!("About to decompress file {}", config.filename);
-
-    let bytes = fs::read(config.filename)?;
-
-    println!("With bytes:");
-    for byte in bytes.iter() {
-        println!("\t{:#010b}", byte);
-    }
+    println!("Decompression in not implemented yet");
 
     Ok(())
 }
