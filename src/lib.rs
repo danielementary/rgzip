@@ -67,8 +67,8 @@ fn decompress(config: Config) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-enum Huffman_node {
-    Inode(Box<Huffman_node>, Box<Huffman_node>),
+enum HuffmanNode {
+    Inode(Box<HuffmanNode>, Box<HuffmanNode>),
     Lnode(i32),
 }
 
@@ -79,10 +79,10 @@ enum Bit {
 
 type Bits = VecDeque<Bit>;
 
-impl Huffman_node {
+impl HuffmanNode {
     fn decode<'a>(&self, bits: &'a mut Bits) -> (i32, &'a Bits) {
         match self {
-            Huffman_node::Inode(left_child, right_child) => {
+            HuffmanNode::Inode(left_child, right_child) => {
                 let current_bit = bits.pop_front().expect("Not enough bits for decode");
                 let child = match current_bit {
                     Bit::Zero => left_child,
@@ -91,7 +91,7 @@ impl Huffman_node {
 
                 child.decode(bits)
             }
-            Huffman_node::Lnode(value) => (*value, bits),
+            HuffmanNode::Lnode(value) => (*value, bits),
         }
     }
 }
@@ -103,12 +103,12 @@ mod tests {
     #[test]
     fn basic_node_decode() {
         let left_value = 10;
-        let left_child = Huffman_node::Lnode(left_value);
+        let left_child = HuffmanNode::Lnode(left_value);
 
         let right_value = 20;
-        let right_child = Huffman_node::Lnode(right_value);
+        let right_child = HuffmanNode::Lnode(right_value);
 
-        let tree = Huffman_node::Inode(Box::new(left_child), Box::new(right_child));
+        let tree = HuffmanNode::Inode(Box::new(left_child), Box::new(right_child));
 
         let mut zero: Bits = VecDeque::from(vec![Bit::Zero]);
         let decoded_zero = tree.decode(&mut zero);
