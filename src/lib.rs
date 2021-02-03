@@ -85,13 +85,39 @@ impl Huffman_node {
             Huffman_node::Inode(left_child, right_child) => {
                 let current_bit = bits.pop_front().expect("Not enough bits for decode");
                 let child = match current_bit {
-                    Zero => left_child,
-                    One => right_child,
+                    Bit::Zero => left_child,
+                    Bit::One => right_child,
                 };
 
                 child.decode(bits)
             }
             Huffman_node::Lnode(value) => (*value, bits),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn basic_node_decode() {
+        let left_value = 10;
+        let left_child = Huffman_node::Lnode(left_value);
+
+        let right_value = 20;
+        let right_child = Huffman_node::Lnode(right_value);
+
+        let tree = Huffman_node::Inode(Box::new(left_child), Box::new(right_child));
+
+        let mut zero: Bits = VecDeque::from(vec![Bit::Zero]);
+        let decoded_zero = tree.decode(&mut zero);
+        assert!(decoded_zero.0 == left_value);
+        assert!(zero.len() == 0);
+
+        let mut one: Bits = VecDeque::from(vec![Bit::One]);
+        let decoded_one = tree.decode(&mut one);
+        assert!(decoded_one.0 == right_value);
+        assert!(one.len() == 0);
     }
 }
