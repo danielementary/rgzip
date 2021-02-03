@@ -79,8 +79,13 @@ enum Bit {
 
 type Bits = VecDeque<Bit>;
 
+struct Decode<'a> {
+    value: i32,
+    remaining_bits: &'a Bits,
+}
+
 impl HuffmanNode {
-    fn decode<'a>(&self, bits: &'a mut Bits) -> (i32, &'a Bits) {
+    fn decode<'a>(&self, bits: &'a mut Bits) -> Decode<'a> {
         match self {
             HuffmanNode::Inode(left_child, right_child) => {
                 let current_bit = bits.pop_front().expect("Not enough bits for decode");
@@ -91,7 +96,10 @@ impl HuffmanNode {
 
                 child.decode(bits)
             }
-            HuffmanNode::Lnode(value) => (*value, bits),
+            HuffmanNode::Lnode(value) => Decode {
+                value: *value,
+                remaining_bits: bits,
+            },
         }
     }
 }
@@ -112,12 +120,14 @@ mod tests {
 
         let mut zero: Bits = VecDeque::from(vec![Bit::Zero]);
         let decoded_zero = tree.decode(&mut zero);
-        assert!(decoded_zero.0 == left_value);
+        assert!(decoded_zero.value == left_value);
+        assert!(decoded_zero.remaining_bits.len() == 0);
         assert!(zero.len() == 0);
 
         let mut one: Bits = VecDeque::from(vec![Bit::One]);
         let decoded_one = tree.decode(&mut one);
-        assert!(decoded_one.0 == right_value);
+        assert!(decoded_one.value == right_value);
+        assert!(decoded_one.remaining_bits.len() == 0);
         assert!(one.len() == 0);
     }
 }
