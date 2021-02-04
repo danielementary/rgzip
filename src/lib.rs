@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{BTreeMap, VecDeque};
 use std::error::Error;
 use std::fs;
 
@@ -118,7 +118,7 @@ impl HuffmanNode {
 
 impl HuffmanTree {
     fn build_huffman_tree(code_length_pairs: Vec<CodeLengthPair>) -> HuffmanTree {
-        let mut lengths_counts = HashMap::new();
+        let mut lengths_counts = BTreeMap::new();
         for length in code_length_pairs
             .iter()
             .map(|pair| pair.length)
