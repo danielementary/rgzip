@@ -79,7 +79,7 @@ struct HuffmanTree {
 
 enum HuffmanNode {
     Inode(Box<HuffmanNode>, Box<HuffmanNode>),
-    Lnode(i32),
+    Lnode(Byte),
 }
 
 enum Bit {
@@ -91,7 +91,7 @@ type Bits = VecDeque<Bit>;
 type Byte = u8;
 
 struct Decode<'a> {
-    code: i32,
+    code: Byte,
     remaining_bits: &'a Bits,
 }
 
