@@ -91,7 +91,7 @@ type Bits = VecDeque<Bit>;
 type Byte = u8;
 
 struct Decode<'a> {
-    value: i32,
+    code: i32,
     remaining_bits: &'a Bits,
 }
 
@@ -107,8 +107,8 @@ impl HuffmanNode {
 
                 child.decode(bits)
             }
-            HuffmanNode::Lnode(value) => Decode {
-                value: *value,
+            HuffmanNode::Lnode(code) => Decode {
+                code: *code,
                 remaining_bits: bits,
             },
         }
@@ -131,13 +131,13 @@ mod tests {
 
         let mut zero: Bits = VecDeque::from(vec![Bit::Zero]);
         let decoded_zero = tree.decode(&mut zero);
-        assert!(decoded_zero.value == left_value);
+        assert!(decoded_zero.code == left_value);
         assert!(decoded_zero.remaining_bits.len() == 0);
         assert!(zero.len() == 0);
 
         let mut one: Bits = VecDeque::from(vec![Bit::One]);
         let decoded_one = tree.decode(&mut one);
-        assert!(decoded_one.value == right_value);
+        assert!(decoded_one.code == right_value);
         assert!(decoded_one.remaining_bits.len() == 0);
         assert!(one.len() == 0);
     }
