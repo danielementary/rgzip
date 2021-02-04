@@ -73,8 +73,8 @@ struct CodeLengthPair {
 }
 
 struct HuffmanTree {
-    code_length_pairs: Vec<CodeLengthPair>,
-    root: HuffmanNode,
+    code_length_pairs: Vec<CodeLengthPair>, // these pairs order defines lexicograpical order of codes
+    root: Option<HuffmanNode>,
 }
 
 enum HuffmanNode {
