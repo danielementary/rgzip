@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 use std::error::Error;
 use std::fs;
 
@@ -74,7 +74,8 @@ struct CodeLengthPair {
 
 struct HuffmanTree {
     code_length_pairs: Vec<CodeLengthPair>, // these pairs order defines lexicograpical order of codes
-    root: Option<HuffmanNode>,
+    lengths: Vec<i32>,
+    root: HuffmanNode,
 }
 
 enum HuffmanNode {
@@ -111,6 +112,23 @@ impl HuffmanNode {
                 code: *code,
                 remaining_bits: bits,
             },
+        }
+    }
+}
+
+impl HuffmanTree {
+    fn build_huffman_tree(code_length_pairs: Vec<CodeLengthPair>) -> HuffmanTree {
+        let mut lengths: Vec<i32> = code_length_pairs.iter().map(|pair| pair.length).collect();
+        lengths.sort();
+        lengths.dedup();
+
+        //TODO create proper root
+        let root = HuffmanNode::Lnode(0);
+
+        HuffmanTree {
+            code_length_pairs,
+            lengths,
+            root,
         }
     }
 }
