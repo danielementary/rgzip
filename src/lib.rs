@@ -67,6 +67,16 @@ fn decompress(config: Config) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+struct CodeLengthPair {
+    code: Byte,
+    length: i32,
+}
+
+struct HuffmanTree {
+    code_length_pairs: Vec<CodeLengthPair>,
+    root: HuffmanNode,
+}
+
 enum HuffmanNode {
     Inode(Box<HuffmanNode>, Box<HuffmanNode>),
     Lnode(i32),
@@ -78,6 +88,7 @@ enum Bit {
 }
 
 type Bits = VecDeque<Bit>;
+type Byte = u8;
 
 struct Decode<'a> {
     value: i32,
