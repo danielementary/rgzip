@@ -236,12 +236,24 @@ mod tests {
 
     fn lengths_counts_RFC_1951() -> BTreeMap<i32, i32> {
         let mut expected_lengths_counts: BTreeMap<i32, i32> = BTreeMap::new();
+
         expected_lengths_counts.insert(0, 0);
         expected_lengths_counts.insert(2, 1);
         expected_lengths_counts.insert(3, 5);
         expected_lengths_counts.insert(4, 2);
 
         expected_lengths_counts
+    }
+
+    fn lengths_codes_RFC_1951() -> BTreeMap<i32, i32> {
+        let mut lengths_codes: BTreeMap<i32, i32> = BTreeMap::new();
+
+        lengths_codes.insert(0, 0);
+        lengths_codes.insert(2, 0);
+        lengths_codes.insert(3, 2);
+        lengths_codes.insert(4, 14);
+
+        lengths_codes
     }
 
     #[test]
@@ -268,9 +280,16 @@ mod tests {
     }
 
     #[test]
-    fn build_lengths_counts_RFC1951() {
+    fn build_lengths_counts_RFC_1951() {
         let lengths_counts = HuffmanTree::build_lengths_counts(&symbol_length_pairs_RFC_1951());
 
         assert_eq!(lengths_counts, lengths_counts_RFC_1951());
+    }
+
+    #[test]
+    fn build_lengths_codes_RFC_1951() {
+        let lengths_codes = HuffmanTree::build_lengths_codes(&lengths_counts_RFC_1951());
+
+        assert_eq!(lengths_codes, lengths_codes_RFC_1951());
     }
 }
