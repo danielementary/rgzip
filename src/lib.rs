@@ -67,13 +67,13 @@ fn decompress(config: Config) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-struct CodeLengthPair {
-    code: Byte,
+struct SymbolLengthPair {
+    symbol: Byte,
     length: i32,
 }
 
 struct HuffmanTree {
-    code_length_pairs: Vec<CodeLengthPair>, // these pairs order defines lexicograpical order of codes
+    symbol_length_pairs: Vec<SymbolLengthPair>, // these pairs order defines lexicograpical order of codes
     lengths_counts: BTreeMap<i32, i32>,
     root: HuffmanNode,
 }
@@ -92,7 +92,7 @@ type Bits = VecDeque<Bit>;
 type Byte = u8;
 
 struct Decode<'a> {
-    code: Byte,
+    symbol: Byte,
     remaining_bits: &'a Bits,
 }
 
@@ -108,8 +108,8 @@ impl HuffmanNode {
 
                 child.decode(bits)
             }
-            HuffmanNode::Lnode(code) => Decode {
-                code: *code,
+            HuffmanNode::Lnode(symbol) => Decode {
+                symbol: *symbol,
                 remaining_bits: bits,
             },
         }
@@ -117,10 +117,10 @@ impl HuffmanNode {
 }
 
 impl HuffmanTree {
-    fn build_huffman_tree(code_length_pairs: Vec<CodeLengthPair>) -> HuffmanTree {
+    fn build_huffman_tree(symbol_length_pairs: Vec<SymbolLengthPair>) -> HuffmanTree {
         let mut lengths_counts: BTreeMap<i32, i32> = BTreeMap::new();
         lengths_counts.insert(0, 0);
-        for length in code_length_pairs
+        for length in symbol_length_pairs
             .iter()
             .map(|pair| pair.length)
             .collect::<Vec<i32>>()
@@ -139,11 +139,18 @@ impl HuffmanTree {
             lengths_codes.insert(*length, code);
         }
 
+        let mut symbol_codes: BTreeMap<Byte, i32> = BTreeMap::new();
+        for SymbolLengthPair { symbol, length } in symbol_length_pairs.iter() {
+            let code = lengths_codes.get_mut(&length).unwrap();
+            symbol_codes.insert(*symbol, *code);
+            *code += 1;
+        }
+
         //TODO create proper root
         let root = HuffmanNode::Lnode(0);
 
         HuffmanTree {
-            code_length_pairs,
+            symbol_length_pairs,
             lengths_counts,
             root,
         }
@@ -166,13 +173,13 @@ mod tests {
 
         let mut zero: Bits = VecDeque::from(vec![Bit::Zero]);
         let decoded_zero = tree.decode(&mut zero);
-        assert!(decoded_zero.code == left_value);
+        assert!(decoded_zero.symbol == left_value);
         assert!(decoded_zero.remaining_bits.len() == 0);
         assert!(zero.len() == 0);
 
         let mut one: Bits = VecDeque::from(vec![Bit::One]);
         let decoded_one = tree.decode(&mut one);
-        assert!(decoded_one.code == right_value);
+        assert!(decoded_one.symbol == right_value);
         assert!(decoded_one.remaining_bits.len() == 0);
         assert!(one.len() == 0);
     }
