@@ -74,7 +74,7 @@ struct CodeLengthPair {
 
 struct HuffmanTree {
     code_length_pairs: Vec<CodeLengthPair>, // these pairs order defines lexicograpical order of codes
-    lengths_counts: HashMap<i32, i32>,
+    lengths_counts: BTreeMap<i32, i32>,
     root: HuffmanNode,
 }
 
@@ -118,7 +118,8 @@ impl HuffmanNode {
 
 impl HuffmanTree {
     fn build_huffman_tree(code_length_pairs: Vec<CodeLengthPair>) -> HuffmanTree {
-        let mut lengths_counts = BTreeMap::new();
+        let mut lengths_counts: BTreeMap<i32, i32> = BTreeMap::new();
+        lengths_counts.insert(0, 0);
         for length in code_length_pairs
             .iter()
             .map(|pair| pair.length)
@@ -126,6 +127,16 @@ impl HuffmanTree {
         {
             let count = lengths_counts.entry(length).or_insert(0);
             *count += 1;
+        }
+
+        let mut lengths_codes: BTreeMap<i32, i32> = BTreeMap::new();
+        let mut code = 0;
+        let mut previous = 0;
+        for length in lengths_counts.keys() {
+            code = (code + lengths_counts.get(&previous).unwrap()) << 1;
+            previous = *length;
+
+            lengths_codes.insert(*length, code);
         }
 
         //TODO create proper root
