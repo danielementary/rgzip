@@ -117,7 +117,8 @@ impl HuffmanNode {
 }
 
 impl HuffmanTree {
-    fn build_lengths_counts(lengths: Vec<i32>) -> BTreeMap<i32, i32> {
+    fn build_lengths_counts(symbol_length_pairs: &Vec<SymbolLengthPair>) -> BTreeMap<i32, i32> {
+        let lengths: Vec<i32> = symbol_length_pairs.iter().map(|pair| pair.length).collect();
         let mut lengths_counts: BTreeMap<i32, i32> = BTreeMap::new();
 
         for length in lengths {
@@ -160,12 +161,8 @@ impl HuffmanTree {
     }
 
     fn build_huffman_tree(symbol_length_pairs: Vec<SymbolLengthPair>) -> HuffmanTree {
-        let lengths_counts = HuffmanTree::build_lengths_counts(
-            symbol_length_pairs.iter().map(|pair| pair.length).collect(),
-        );
-
+        let lengths_counts = HuffmanTree::build_lengths_counts(&symbol_length_pairs);
         let mut lengths_codes = HuffmanTree::build_lengths_codes(&lengths_counts);
-
         let symbols_codes =
             HuffmanTree::build_symbols_codes(&symbol_length_pairs, &mut lengths_codes);
 
@@ -183,6 +180,59 @@ impl HuffmanTree {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn symbol_length_pairs() -> Vec<SymbolLengthPair> {
+        let symbol_length_pair_A = SymbolLengthPair {
+            symbol: b'A',
+            length: 3,
+        };
+
+        let symbol_length_pair_B = SymbolLengthPair {
+            symbol: b'B',
+            length: 3,
+        };
+
+        let symbol_length_pair_C = SymbolLengthPair {
+            symbol: b'C',
+            length: 3,
+        };
+
+        let symbol_length_pair_D = SymbolLengthPair {
+            symbol: b'D',
+            length: 3,
+        };
+
+        let symbol_length_pair_E = SymbolLengthPair {
+            symbol: b'E',
+            length: 3,
+        };
+
+        let symbol_length_pair_F = SymbolLengthPair {
+            symbol: b'F',
+            length: 2,
+        };
+
+        let symbol_length_pair_G = SymbolLengthPair {
+            symbol: b'G',
+            length: 4,
+        };
+
+        let symbol_length_pair_H = SymbolLengthPair {
+            symbol: b'H',
+            length: 4,
+        };
+
+        vec![
+            symbol_length_pair_A,
+            symbol_length_pair_B,
+            symbol_length_pair_C,
+            symbol_length_pair_D,
+            symbol_length_pair_E,
+            symbol_length_pair_F,
+            symbol_length_pair_G,
+            symbol_length_pair_H,
+        ]
+    }
 
     #[test]
     fn basic_node_decode() {
@@ -205,5 +255,20 @@ mod tests {
         assert!(decoded_one.symbol == right_value);
         assert!(decoded_one.remaining_bits.len() == 0);
         assert!(one.len() == 0);
+    }
+
+    #[test]
+    fn build_lengths_counts_RFC1951() {
+        let symbol_length_pairs = symbol_length_pairs();
+
+        let lengths_counts = HuffmanTree::build_lengths_counts(&symbol_length_pairs);
+
+        let mut expected_lengths_counts: BTreeMap<i32, i32> = BTreeMap::new();
+        expected_lengths_counts.insert(0, 0);
+        expected_lengths_counts.insert(2, 1);
+        expected_lengths_counts.insert(3, 5);
+        expected_lengths_counts.insert(4, 2);
+
+        assert_eq!(lengths_counts, expected_lengths_counts);
     }
 }
