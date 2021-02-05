@@ -181,7 +181,7 @@ impl HuffmanTree {
 mod tests {
     use super::*;
 
-    fn symbol_length_pairs() -> Vec<SymbolLengthPair> {
+    fn symbol_length_pairs_RFC_1951() -> Vec<SymbolLengthPair> {
         let symbol_length_pair_A = SymbolLengthPair {
             symbol: b'A',
             length: 3,
@@ -234,6 +234,16 @@ mod tests {
         ]
     }
 
+    fn lengths_counts_RFC_1951() -> BTreeMap<i32, i32> {
+        let mut expected_lengths_counts: BTreeMap<i32, i32> = BTreeMap::new();
+        expected_lengths_counts.insert(0, 0);
+        expected_lengths_counts.insert(2, 1);
+        expected_lengths_counts.insert(3, 5);
+        expected_lengths_counts.insert(4, 2);
+
+        expected_lengths_counts
+    }
+
     #[test]
     fn basic_node_decode() {
         let left_value = 10;
@@ -259,16 +269,8 @@ mod tests {
 
     #[test]
     fn build_lengths_counts_RFC1951() {
-        let symbol_length_pairs = symbol_length_pairs();
+        let lengths_counts = HuffmanTree::build_lengths_counts(&symbol_length_pairs_RFC_1951());
 
-        let lengths_counts = HuffmanTree::build_lengths_counts(&symbol_length_pairs);
-
-        let mut expected_lengths_counts: BTreeMap<i32, i32> = BTreeMap::new();
-        expected_lengths_counts.insert(0, 0);
-        expected_lengths_counts.insert(2, 1);
-        expected_lengths_counts.insert(3, 5);
-        expected_lengths_counts.insert(4, 2);
-
-        assert_eq!(lengths_counts, expected_lengths_counts);
+        assert_eq!(lengths_counts, lengths_counts_RFC_1951());
     }
 }
