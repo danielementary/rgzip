@@ -117,21 +117,24 @@ impl HuffmanNode {
 }
 
 impl HuffmanTree {
-    fn build_huffman_tree(symbol_length_pairs: Vec<SymbolLengthPair>) -> HuffmanTree {
+    fn build_lengths_counts(lengths: Vec<i32>) -> BTreeMap<i32, i32> {
         let mut lengths_counts: BTreeMap<i32, i32> = BTreeMap::new();
-        lengths_counts.insert(0, 0);
-        for length in symbol_length_pairs
-            .iter()
-            .map(|pair| pair.length)
-            .collect::<Vec<i32>>()
-        {
+
+        for length in lengths {
             let count = lengths_counts.entry(length).or_insert(0);
             *count += 1;
         }
 
+        lengths_counts.insert(0, 0);
+
+        lengths_counts
+    }
+
+    fn build_lengths_codes(lengths_counts: &BTreeMap<i32, i32>) -> BTreeMap<i32, i32> {
         let mut lengths_codes: BTreeMap<i32, i32> = BTreeMap::new();
         let mut code = 0;
         let mut previous = 0;
+
         for length in lengths_counts.keys() {
             code = (code + lengths_counts.get(&previous).unwrap()) << 1;
             previous = *length;
@@ -139,12 +142,32 @@ impl HuffmanTree {
             lengths_codes.insert(*length, code);
         }
 
+        lengths_codes
+    }
+
+    fn build_symbols_codes(
+        symbol_length_pairs: &Vec<SymbolLengthPair>,
+        lengths_codes: &mut BTreeMap<i32, i32>,
+    ) -> BTreeMap<Byte, i32> {
         let mut symbol_codes: BTreeMap<Byte, i32> = BTreeMap::new();
         for SymbolLengthPair { symbol, length } in symbol_length_pairs.iter() {
             let code = lengths_codes.get_mut(&length).unwrap();
             symbol_codes.insert(*symbol, *code);
             *code += 1;
         }
+
+        symbol_codes
+    }
+
+    fn build_huffman_tree(symbol_length_pairs: Vec<SymbolLengthPair>) -> HuffmanTree {
+        let lengths_counts = HuffmanTree::build_lengths_counts(
+            symbol_length_pairs.iter().map(|pair| pair.length).collect(),
+        );
+
+        let mut lengths_codes = HuffmanTree::build_lengths_codes(&lengths_counts);
+
+        let symbols_codes =
+            HuffmanTree::build_symbols_codes(&symbol_length_pairs, &mut lengths_codes);
 
         //TODO create proper root
         let root = HuffmanNode::Lnode(0);
