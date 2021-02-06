@@ -130,7 +130,7 @@ enum HuffmanNode {
     Lnode(Lnode),
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 enum Bit {
     Zero,
     One,
@@ -209,6 +209,33 @@ impl HuffmanNode {
                 remaining_bits: bits,
             },
         }
+    }
+
+    fn build_symbol_length_pairs_helper(&self, length: i32, result: &mut Vec<SymbolLengthPair>) {
+        match self {
+            HuffmanNode::Inode(Inode {
+                left_child,
+                right_child,
+                ..
+            }) => {
+                left_child.build_symbol_length_pairs_helper(length + 1, result);
+                right_child.build_symbol_length_pairs_helper(length + 1, result);
+            }
+            HuffmanNode::Lnode(Lnode { symbol, .. }) => {
+                result.push(SymbolLengthPair {
+                    symbol: *symbol,
+                    length,
+                });
+            }
+        }
+    }
+
+    fn build_symbol_length_pairs(&self) -> Vec<SymbolLengthPair> {
+        let mut result: Vec<SymbolLengthPair> = Vec::new();
+
+        self.build_symbol_length_pairs_helper(0, &mut result);
+
+        result
     }
 }
 
