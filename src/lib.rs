@@ -1,4 +1,5 @@
-use std::collections::{BTreeMap, VecDeque};
+use std::cmp::Ordering;
+use std::collections::{BTreeMap, BinaryHeap, VecDeque};
 use std::error::Error;
 use std::fs;
 
@@ -72,13 +73,13 @@ struct SymbolLengthPair {
     length: i32,
 }
 
-struct SymbolOccurencePair {
+struct SymbolWeightPair {
     symbol: Byte,
-    occurence: i32,
+    weight: i32,
 }
 
 struct HuffmanTree {
-    symbol_occurence_pairs: Vec<SymbolOccurencePair>,
+    symbol_weight_pairs: Vec<SymbolWeightPair>,
     tree: HuffmanNode,
 }
 
@@ -87,16 +88,41 @@ struct HuffmanLUT {
     lookup_table: BTreeMap<Byte, Bits>,
 }
 
+#[derive(PartialEq)]
 struct Inode {
     left_child: Box<HuffmanNode>,
     right_child: Box<HuffmanNode>,
-    height: i32,
     cached_weight: i32,
 }
 
+#[derive(PartialEq)]
 struct Lnode {
     symbol: Byte,
     weight: i32,
+}
+
+impl PartialEq for HuffmanNode {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (HuffmanNode::Inode(s), HuffmanNode::Inode(o)) => s == o,
+            (HuffmanNode::Lnode(s), HuffmanNode::Lnode(o)) => s == o,
+            _ => false,
+        }
+    }
+}
+
+impl Eq for HuffmanNode {}
+
+impl PartialOrd for HuffmanNode {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for HuffmanNode {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.weight().cmp(&other.weight())
+    }
 }
 
 enum HuffmanNode {
@@ -118,7 +144,51 @@ struct Decode<'a> {
     remaining_bits: &'a Bits,
 }
 
+impl HuffmanTree {
+    fn build_huffman_tree(symbol_weight_pairs: Vec<SymbolWeightPair>) -> HuffmanTree {
+        let mut forest: BinaryHeap<HuffmanNode> = symbol_weight_pairs
+            .iter()
+            .map(|SymbolWeightPair { symbol, weight }| {
+                HuffmanNode::Lnode(Lnode {
+                    symbol: *symbol,
+                    weight: *weight,
+                })
+            })
+            .collect();
+
+        if forest.len() < 2 {
+            panic!("forest is too small to build a huffman tree");
+        }
+
+        while forest.len() > 1 {
+            let left_child = Box::new(forest.pop().unwrap());
+            let right_child = Box::new(forest.pop().unwrap());
+            let cached_weight = left_child.weight() + right_child.weight();
+
+            let new_tree = HuffmanNode::Inode(Inode {
+                left_child,
+                right_child,
+                cached_weight,
+            });
+
+            forest.push(new_tree);
+        }
+
+        HuffmanTree {
+            symbol_weight_pairs,
+            tree: forest.pop().unwrap(),
+        }
+    }
+}
+
 impl HuffmanNode {
+    fn weight(&self) -> i32 {
+        match self {
+            HuffmanNode::Inode(iNode) => iNode.cached_weight,
+            HuffmanNode::Lnode(lNode) => lNode.weight,
+        }
+    }
+
     fn decode<'a>(&self, bits: &'a mut Bits) -> Decode<'a> {
         match self {
             HuffmanNode::Inode(Inode {
