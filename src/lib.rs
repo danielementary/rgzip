@@ -87,9 +87,21 @@ struct HuffmanLUT {
     lookup_table: BTreeMap<Byte, Bits>,
 }
 
+struct Inode {
+    left_child: Box<HuffmanNode>,
+    right_child: Box<HuffmanNode>,
+    height: i32,
+    cached_weight: i32,
+}
+
+struct Lnode {
+    symbol: Byte,
+    weight: i32,
+}
+
 enum HuffmanNode {
-    Inode(Box<HuffmanNode>, Box<HuffmanNode>, i32),
-    Lnode(Byte, i32),
+    Inode(Inode),
+    Lnode(Lnode),
 }
 
 #[derive(PartialEq, Debug)]
@@ -109,7 +121,11 @@ struct Decode<'a> {
 impl HuffmanNode {
     fn decode<'a>(&self, bits: &'a mut Bits) -> Decode<'a> {
         match self {
-            HuffmanNode::Inode(left_child, right_child, _) => {
+            HuffmanNode::Inode(Inode {
+                left_child,
+                right_child,
+                ..
+            }) => {
                 let current_bit = bits.pop_front().expect("Not enough bits to decode");
                 let child = match current_bit {
                     Bit::Zero => left_child,
@@ -118,7 +134,7 @@ impl HuffmanNode {
 
                 child.decode(bits)
             }
-            HuffmanNode::Lnode(symbol, _) => Decode {
+            HuffmanNode::Lnode(Lnode { symbol, .. }) => Decode {
                 symbol: *symbol,
                 remaining_bits: bits,
             },
@@ -299,17 +315,24 @@ mod tests {
     fn basic_node_decode() {
         let left_symbol = 10;
         let left_weight = 1;
-        let left_child = HuffmanNode::Lnode(left_symbol, left_weight);
+        let left_child = HuffmanNode::Lnode(Lnode {
+            symbol: left_symbol,
+            weight: left_weight,
+        });
 
         let right_symbol = 20;
         let right_weight = 1;
-        let right_child = HuffmanNode::Lnode(right_symbol, right_weight);
+        let right_child = HuffmanNode::Lnode(Lnode {
+            symbol: right_symbol,
+            weight: right_weight,
+        });
 
-        let tree = HuffmanNode::Inode(
-            Box::new(left_child),
-            Box::new(right_child),
-            left_weight + right_weight,
-        );
+        let tree = HuffmanNode::Inode(Inode {
+            left_child: Box::new(left_child),
+            right_child: Box::new(right_child),
+            height: 1,
+            cached_weight: left_weight + right_weight,
+        });
 
         let mut zero: Bits = VecDeque::from(vec![Bit::Zero]);
         let decoded_zero = tree.decode(&mut zero);
