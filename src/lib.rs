@@ -72,10 +72,19 @@ struct SymbolLengthPair {
     length: i32,
 }
 
+struct SymbolOccurencePair {
+    symbol: Byte,
+    occurence: i32,
+}
+
 struct HuffmanTree {
+    symbol_occurence_pairs: Vec<SymbolOccurencePair>,
+    tree: HuffmanNode,
+}
+
+struct HuffmanLUT {
     symbol_length_pairs: Vec<SymbolLengthPair>, // these pairs order defines lexicograpical order of codes
-    lengths_counts: BTreeMap<i32, i32>,
-    root: HuffmanNode,
+    lookup_table: BTreeMap<Byte, Bits>,
 }
 
 enum HuffmanNode {
@@ -117,7 +126,7 @@ impl HuffmanNode {
     }
 }
 
-impl HuffmanTree {
+impl HuffmanLUT {
     fn build_lengths_counts(symbol_length_pairs: &Vec<SymbolLengthPair>) -> BTreeMap<i32, i32> {
         let lengths: Vec<i32> = symbol_length_pairs.iter().map(|pair| pair.length).collect();
         let mut lengths_counts: BTreeMap<i32, i32> = BTreeMap::new();
@@ -174,19 +183,15 @@ impl HuffmanTree {
         symbols_codes
     }
 
-    fn build_huffman_tree(symbol_length_pairs: Vec<SymbolLengthPair>) -> HuffmanTree {
-        let lengths_counts = HuffmanTree::build_lengths_counts(&symbol_length_pairs);
-        let mut lengths_codes = HuffmanTree::build_lengths_codes(&lengths_counts);
+    fn build_huffman_tree(symbol_length_pairs: Vec<SymbolLengthPair>) -> HuffmanLUT {
+        let lengths_counts = HuffmanLUT::build_lengths_counts(&symbol_length_pairs);
+        let mut lengths_codes = HuffmanLUT::build_lengths_codes(&lengths_counts);
         let symbols_codes =
-            HuffmanTree::build_symbols_codes(&symbol_length_pairs, &mut lengths_codes);
+            HuffmanLUT::build_symbols_codes(&symbol_length_pairs, &mut lengths_codes);
 
-        //TODO create proper root
-        let root = HuffmanNode::Lnode(0);
-
-        HuffmanTree {
+        HuffmanLUT {
             symbol_length_pairs,
-            lengths_counts,
-            root,
+            lookup_table: symbols_codes,
         }
     }
 }
@@ -316,21 +321,21 @@ mod tests {
 
     #[test]
     fn build_lengths_counts_RFC_1951() {
-        let lengths_counts = HuffmanTree::build_lengths_counts(&symbol_length_pairs_RFC_1951());
+        let lengths_counts = HuffmanLUT::build_lengths_counts(&symbol_length_pairs_RFC_1951());
 
         assert_eq!(lengths_counts, lengths_counts_RFC_1951());
     }
 
     #[test]
     fn build_lengths_codes_RFC_1951() {
-        let lengths_codes = HuffmanTree::build_lengths_codes(&lengths_counts_RFC_1951());
+        let lengths_codes = HuffmanLUT::build_lengths_codes(&lengths_counts_RFC_1951());
 
         assert_eq!(lengths_codes, lengths_codes_RFC_1951());
     }
 
     #[test]
     fn build_symbols_codes_RFC_1951() {
-        let symbols_codes = HuffmanTree::build_symbols_codes(
+        let symbols_codes = HuffmanLUT::build_symbols_codes(
             &symbol_length_pairs_RFC_1951(),
             &mut lengths_codes_RFC_1951(),
         );
