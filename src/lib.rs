@@ -88,8 +88,8 @@ struct HuffmanLUT {
 }
 
 enum HuffmanNode {
-    Inode(Box<HuffmanNode>, Box<HuffmanNode>),
-    Lnode(Byte),
+    Inode(Box<HuffmanNode>, Box<HuffmanNode>, i32),
+    Lnode(Byte, i32),
 }
 
 #[derive(PartialEq, Debug)]
@@ -109,7 +109,7 @@ struct Decode<'a> {
 impl HuffmanNode {
     fn decode<'a>(&self, bits: &'a mut Bits) -> Decode<'a> {
         match self {
-            HuffmanNode::Inode(left_child, right_child) => {
+            HuffmanNode::Inode(left_child, right_child, _) => {
                 let current_bit = bits.pop_front().expect("Not enough bits to decode");
                 let child = match current_bit {
                     Bit::Zero => left_child,
@@ -118,7 +118,7 @@ impl HuffmanNode {
 
                 child.decode(bits)
             }
-            HuffmanNode::Lnode(symbol) => Decode {
+            HuffmanNode::Lnode(symbol, _) => Decode {
                 symbol: *symbol,
                 remaining_bits: bits,
             },
@@ -156,11 +156,11 @@ impl HuffmanLUT {
         lengths_codes
     }
 
-    fn build_symbols_codes(
+    fn build_lookup_table(
         symbol_length_pairs: &Vec<SymbolLengthPair>,
         lengths_codes: &mut BTreeMap<i32, i32>,
     ) -> BTreeMap<Byte, Bits> {
-        let mut symbols_codes: BTreeMap<Byte, Bits> = BTreeMap::new();
+        let mut lookup_table: BTreeMap<Byte, Bits> = BTreeMap::new();
         for SymbolLengthPair { symbol, length } in symbol_length_pairs.iter() {
             let numerical_code = lengths_codes.get_mut(&length).unwrap();
             let mut code = VecDeque::new();
@@ -176,22 +176,21 @@ impl HuffmanLUT {
 
                 i -= 1;
             }
-            symbols_codes.insert(*symbol, code);
+            lookup_table.insert(*symbol, code);
             *numerical_code += 1;
         }
 
-        symbols_codes
+        lookup_table
     }
 
     fn build_huffman_tree(symbol_length_pairs: Vec<SymbolLengthPair>) -> HuffmanLUT {
         let lengths_counts = HuffmanLUT::build_lengths_counts(&symbol_length_pairs);
         let mut lengths_codes = HuffmanLUT::build_lengths_codes(&lengths_counts);
-        let symbols_codes =
-            HuffmanLUT::build_symbols_codes(&symbol_length_pairs, &mut lengths_codes);
+        let lookup_table = HuffmanLUT::build_lookup_table(&symbol_length_pairs, &mut lengths_codes);
 
         HuffmanLUT {
             symbol_length_pairs,
-            lookup_table: symbols_codes,
+            lookup_table: lookup_table,
         }
     }
 }
@@ -275,48 +274,54 @@ mod tests {
         lengths_codes
     }
 
-    fn symbols_codes_RFC_1951() -> BTreeMap<Byte, Bits> {
-        let mut symbols_codes: BTreeMap<Byte, Bits> = BTreeMap::new();
+    fn lookup_table_RFC_1951() -> BTreeMap<Byte, Bits> {
+        let mut lookup_table: BTreeMap<Byte, Bits> = BTreeMap::new();
 
-        symbols_codes.insert(b'A', VecDeque::from(vec![Bit::Zero, Bit::One, Bit::Zero]));
-        symbols_codes.insert(b'B', VecDeque::from(vec![Bit::Zero, Bit::One, Bit::One]));
-        symbols_codes.insert(b'C', VecDeque::from(vec![Bit::One, Bit::Zero, Bit::Zero]));
-        symbols_codes.insert(b'D', VecDeque::from(vec![Bit::One, Bit::Zero, Bit::One]));
-        symbols_codes.insert(b'E', VecDeque::from(vec![Bit::One, Bit::One, Bit::Zero]));
-        symbols_codes.insert(b'F', VecDeque::from(vec![Bit::Zero, Bit::Zero]));
-        symbols_codes.insert(
+        lookup_table.insert(b'A', VecDeque::from(vec![Bit::Zero, Bit::One, Bit::Zero]));
+        lookup_table.insert(b'B', VecDeque::from(vec![Bit::Zero, Bit::One, Bit::One]));
+        lookup_table.insert(b'C', VecDeque::from(vec![Bit::One, Bit::Zero, Bit::Zero]));
+        lookup_table.insert(b'D', VecDeque::from(vec![Bit::One, Bit::Zero, Bit::One]));
+        lookup_table.insert(b'E', VecDeque::from(vec![Bit::One, Bit::One, Bit::Zero]));
+        lookup_table.insert(b'F', VecDeque::from(vec![Bit::Zero, Bit::Zero]));
+        lookup_table.insert(
             b'G',
             VecDeque::from(vec![Bit::One, Bit::One, Bit::One, Bit::Zero]),
         );
-        symbols_codes.insert(
+        lookup_table.insert(
             b'H',
             VecDeque::from(vec![Bit::One, Bit::One, Bit::One, Bit::One]),
         );
 
-        symbols_codes
+        lookup_table
     }
 
     #[test]
     fn basic_node_decode() {
-        let left_value = 10;
-        let left_child = HuffmanNode::Lnode(left_value);
+        let left_symbol = 10;
+        let left_weight = 1;
+        let left_child = HuffmanNode::Lnode(left_symbol, left_weight);
 
-        let right_value = 20;
-        let right_child = HuffmanNode::Lnode(right_value);
+        let right_symbol = 20;
+        let right_weight = 1;
+        let right_child = HuffmanNode::Lnode(right_symbol, right_weight);
 
-        let tree = HuffmanNode::Inode(Box::new(left_child), Box::new(right_child));
+        let tree = HuffmanNode::Inode(
+            Box::new(left_child),
+            Box::new(right_child),
+            left_weight + right_weight,
+        );
 
         let mut zero: Bits = VecDeque::from(vec![Bit::Zero]);
         let decoded_zero = tree.decode(&mut zero);
-        assert!(decoded_zero.symbol == left_value);
-        assert!(decoded_zero.remaining_bits.len() == 0);
-        assert!(zero.len() == 0);
+        assert_eq!(decoded_zero.symbol, left_symbol);
+        assert_eq!(decoded_zero.remaining_bits.len(), 0);
+        assert_eq!(zero.len(), 0);
 
         let mut one: Bits = VecDeque::from(vec![Bit::One]);
         let decoded_one = tree.decode(&mut one);
-        assert!(decoded_one.symbol == right_value);
-        assert!(decoded_one.remaining_bits.len() == 0);
-        assert!(one.len() == 0);
+        assert_eq!(decoded_one.symbol, right_symbol);
+        assert_eq!(decoded_one.remaining_bits.len(), 0);
+        assert_eq!(one.len(), 0);
     }
 
     #[test]
@@ -334,12 +339,12 @@ mod tests {
     }
 
     #[test]
-    fn build_symbols_codes_RFC_1951() {
-        let symbols_codes = HuffmanLUT::build_symbols_codes(
+    fn build_lookup_table_RFC_1951() {
+        let lookup_table = HuffmanLUT::build_lookup_table(
             &symbol_length_pairs_RFC_1951(),
             &mut lengths_codes_RFC_1951(),
         );
 
-        assert_eq!(symbols_codes, symbols_codes_RFC_1951());
+        assert_eq!(lookup_table, lookup_table_RFC_1951());
     }
 }
