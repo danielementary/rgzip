@@ -83,6 +83,7 @@ enum HuffmanNode {
     Lnode(Byte),
 }
 
+#[derive(PartialEq, Debug)]
 enum Bit {
     Zero,
     One,
@@ -149,15 +150,28 @@ impl HuffmanTree {
     fn build_symbols_codes(
         symbol_length_pairs: &Vec<SymbolLengthPair>,
         lengths_codes: &mut BTreeMap<i32, i32>,
-    ) -> BTreeMap<Byte, i32> {
-        let mut symbol_codes: BTreeMap<Byte, i32> = BTreeMap::new();
+    ) -> BTreeMap<Byte, Bits> {
+        let mut symbols_codes: BTreeMap<Byte, Bits> = BTreeMap::new();
         for SymbolLengthPair { symbol, length } in symbol_length_pairs.iter() {
-            let code = lengths_codes.get_mut(&length).unwrap();
-            symbol_codes.insert(*symbol, *code);
-            *code += 1;
+            let numerical_code = lengths_codes.get_mut(&length).unwrap();
+            let mut code = VecDeque::new();
+            let mut i = length - 1;
+            while i >= 0 {
+                let bit = if *numerical_code & (1 << i) == 0 {
+                    Bit::Zero
+                } else {
+                    Bit::One
+                };
+
+                code.push_back(bit);
+
+                i -= 1;
+            }
+            symbols_codes.insert(*symbol, code);
+            *numerical_code += 1;
         }
 
-        symbol_codes
+        symbols_codes
     }
 
     fn build_huffman_tree(symbol_length_pairs: Vec<SymbolLengthPair>) -> HuffmanTree {
@@ -256,6 +270,27 @@ mod tests {
         lengths_codes
     }
 
+    fn symbols_codes_RFC_1951() -> BTreeMap<Byte, Bits> {
+        let mut symbols_codes: BTreeMap<Byte, Bits> = BTreeMap::new();
+
+        symbols_codes.insert(b'A', VecDeque::from(vec![Bit::Zero, Bit::One, Bit::Zero]));
+        symbols_codes.insert(b'B', VecDeque::from(vec![Bit::Zero, Bit::One, Bit::One]));
+        symbols_codes.insert(b'C', VecDeque::from(vec![Bit::One, Bit::Zero, Bit::Zero]));
+        symbols_codes.insert(b'D', VecDeque::from(vec![Bit::One, Bit::Zero, Bit::One]));
+        symbols_codes.insert(b'E', VecDeque::from(vec![Bit::One, Bit::One, Bit::Zero]));
+        symbols_codes.insert(b'F', VecDeque::from(vec![Bit::Zero, Bit::Zero]));
+        symbols_codes.insert(
+            b'G',
+            VecDeque::from(vec![Bit::One, Bit::One, Bit::One, Bit::Zero]),
+        );
+        symbols_codes.insert(
+            b'H',
+            VecDeque::from(vec![Bit::One, Bit::One, Bit::One, Bit::One]),
+        );
+
+        symbols_codes
+    }
+
     #[test]
     fn basic_node_decode() {
         let left_value = 10;
@@ -291,5 +326,15 @@ mod tests {
         let lengths_codes = HuffmanTree::build_lengths_codes(&lengths_counts_RFC_1951());
 
         assert_eq!(lengths_codes, lengths_codes_RFC_1951());
+    }
+
+    #[test]
+    fn build_symbols_codes_RFC_1951() {
+        let symbols_codes = HuffmanTree::build_symbols_codes(
+            &symbol_length_pairs_RFC_1951(),
+            &mut lengths_codes_RFC_1951(),
+        );
+
+        assert_eq!(symbols_codes, symbols_codes_RFC_1951());
     }
 }
