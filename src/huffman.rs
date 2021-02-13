@@ -11,14 +11,14 @@ enum Bit {
 }
 
 type Bits = VecDeque<Bit>;
-type Byte = u8;
+type SymbolType = u8;
 
 struct SymbolWeightPair {
-    symbol: Byte,
+    symbol: SymbolType,
     weight: i32,
 }
 
 struct SymbolLengthPair {
-    symbol: Byte,
+    symbol: SymbolType,
     length: i32,
 }

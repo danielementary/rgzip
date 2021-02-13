@@ -1,10 +1,10 @@
 use std::collections::{BTreeMap, VecDeque};
 
-use super::{Bit, Bits, Byte, SymbolLengthPair};
+use super::{Bit, Bits, SymbolLengthPair, SymbolType};
 
 struct HuffmanLUT {
     symbol_length_pairs: Vec<SymbolLengthPair>, // these pairs order defines lexicograpical order of codes
-    lookup_table: BTreeMap<Byte, Bits>,
+    lookup_table: BTreeMap<SymbolType, Bits>,
 }
 
 impl HuffmanLUT {
@@ -40,8 +40,8 @@ impl HuffmanLUT {
     fn build_lookup_table(
         symbol_length_pairs: &Vec<SymbolLengthPair>,
         lengths_codes: &mut BTreeMap<i32, i32>,
-    ) -> BTreeMap<Byte, Bits> {
-        let mut lookup_table: BTreeMap<Byte, Bits> = BTreeMap::new();
+    ) -> BTreeMap<SymbolType, Bits> {
+        let mut lookup_table: BTreeMap<SymbolType, Bits> = BTreeMap::new();
         for SymbolLengthPair { symbol, length } in symbol_length_pairs.iter() {
             let numerical_code = lengths_codes.get_mut(&length).unwrap();
             let mut code = VecDeque::new();
@@ -155,8 +155,8 @@ mod tests {
         lengths_codes
     }
 
-    fn lookup_table_RFC_1951() -> BTreeMap<Byte, Bits> {
-        let mut lookup_table: BTreeMap<Byte, Bits> = BTreeMap::new();
+    fn lookup_table_RFC_1951() -> BTreeMap<SymbolType, Bits> {
+        let mut lookup_table: BTreeMap<SymbolType, Bits> = BTreeMap::new();
 
         lookup_table.insert(b'A', VecDeque::from(vec![Bit::Zero, Bit::One, Bit::Zero]));
         lookup_table.insert(b'B', VecDeque::from(vec![Bit::Zero, Bit::One, Bit::One]));

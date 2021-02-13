@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-use super::{Bit, Bits, Byte, SymbolLengthPair};
+use super::{Bit, Bits, SymbolLengthPair, SymbolType};
 
 #[derive(PartialEq)]
 pub struct Inode {
@@ -11,7 +11,7 @@ pub struct Inode {
 
 #[derive(PartialEq)]
 pub struct Lnode {
-    pub symbol: Byte,
+    pub symbol: SymbolType,
     pub weight: i32,
 }
 
@@ -45,7 +45,7 @@ pub enum HuffmanNode {
 }
 
 struct Decode<'a> {
-    symbol: Byte,
+    symbol: SymbolType,
     remaining_bits: &'a Bits,
 }
 
