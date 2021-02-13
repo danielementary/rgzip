@@ -1,5 +1,5 @@
 use std::error::Error;
-use std::fs;
+use std::{fs, str};
 
 const COMPRESSED_FILE_EXTENSION: &str = ".rgz";
 
@@ -61,7 +61,65 @@ fn compress(config: Config) -> Result<(), Box<dyn Error>> {
 
 fn decompress(config: Config) -> Result<(), Box<dyn Error>> {
     println!("About to decompress file {}", config.filename);
-    println!("Decompression in not implemented yet");
+    println!("Decompression implementation is in progress...");
+
+    let bytes = fs::read(config.filename)?;
+    let mut bytes = bytes.iter();
+
+    // refactor repetitions
+    let id1 = bytes.next().expect("This file does not contain ID1");
+    if *id1 != 0x1f {
+        return Err("ID1 does not match".into());
+    }
+
+    let id2 = bytes.next().expect("This file does not contain ID2");
+    if *id2 != 0x8b {
+        return Err("ID2 does not match".into());
+    }
+
+    let cm = bytes.next().expect("This file does not contain CM");
+    if *cm != 0x8 {
+        return Err("Only 0x8 is a valid CM standing for deflate".into());
+    }
+
+    let flg = bytes.next().expect("This file does not contain FLG");
+    if *flg != 0x8 {
+        return Err("Only 0x8 is a valid FLG standing for original filename".into());
+    }
+
+    // TODO: interpret date
+    let mtime_0 = bytes.next().expect("This file does not contain MTIME");
+    if *mtime_0 != 0x0 {
+        let mtime_1 = bytes.next().expect("This file does not contain MTIME");
+        let mtime_2 = bytes.next().expect("This file does not contain MTIME");
+        let mtime_3 = bytes.next().expect("This file does not contain MTIME");
+    }
+
+    let xfl = bytes.next().expect("This file does not contain XFL");
+    if *xfl != 0x0 {
+        println!("XFL is ignored as it is different from 0");
+    }
+
+    let os = bytes.next().expect("This file does not contain OS");
+    if *os != 0x3 {
+        return Err("Only 0x3 is a valid OS standing for Unix".into());
+    }
+
+    let mut filename: Vec<u8> = vec![];
+    while let Some(byte) = bytes.next() {
+        if *byte == 0x0 {
+            break;
+        }
+
+        filename.push(*byte);
+    }
+    let filename = str::from_utf8(&filename)?;
+
+    // read compressed blocks
+
+    // read CRC32
+
+    // read ISIZE
 
     Ok(())
 }
