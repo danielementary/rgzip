@@ -1,7 +1,8 @@
 use std::env;
 use std::process;
 
-use rgzip::configuration::Config;
+mod configuration;
+pub use configuration::Config;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
