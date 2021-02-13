@@ -42,10 +42,12 @@ impl HuffmanLUT {
         lengths_codes: &mut BTreeMap<i32, i32>,
     ) -> BTreeMap<SymbolType, Bits> {
         let mut lookup_table: BTreeMap<SymbolType, Bits> = BTreeMap::new();
+
         for SymbolLengthPair { symbol, length } in symbol_length_pairs.iter() {
             let numerical_code = lengths_codes.get_mut(&length).unwrap();
             let mut code = VecDeque::new();
             let mut i = length - 1;
+
             while i >= 0 {
                 let bit = if *numerical_code & (1 << i) == 0 {
                     Bit::Zero
@@ -57,6 +59,7 @@ impl HuffmanLUT {
 
                 i -= 1;
             }
+
             lookup_table.insert(*symbol, code);
             *numerical_code += 1;
         }

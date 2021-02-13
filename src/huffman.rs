@@ -13,6 +13,7 @@ enum Bit {
 type Bits = VecDeque<Bit>;
 type SymbolType = u8;
 
+#[derive(Debug, PartialEq, Clone)]
 struct SymbolWeightPair {
     symbol: SymbolType,
     weight: i32,

@@ -2,14 +2,14 @@ use std::cmp::Ordering;
 
 use super::{Bit, Bits, SymbolLengthPair, SymbolType};
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub struct Inode {
     pub left_child: Box<HuffmanNode>,
     pub right_child: Box<HuffmanNode>,
     pub cached_weight: i32,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub struct Lnode {
     pub symbol: SymbolType,
     pub weight: i32,
@@ -39,6 +39,7 @@ impl Ord for HuffmanNode {
     }
 }
 
+#[derive(Debug)]
 pub enum HuffmanNode {
     Inode(Inode),
     Lnode(Lnode),
