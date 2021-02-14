@@ -89,11 +89,9 @@ fn decompress(config: Config) -> Result<(), Box<dyn Error>> {
 
     // TODO: interpret date
     let mtime_0 = bytes.next().expect("This file does not contain MTIME");
-    if *mtime_0 != 0x0 {
-        let mtime_1 = bytes.next().expect("This file does not contain MTIME");
-        let mtime_2 = bytes.next().expect("This file does not contain MTIME");
-        let mtime_3 = bytes.next().expect("This file does not contain MTIME");
-    }
+    let mtime_1 = bytes.next().expect("This file does not contain MTIME");
+    let mtime_2 = bytes.next().expect("This file does not contain MTIME");
+    let mtime_3 = bytes.next().expect("This file does not contain MTIME");
 
     let xfl = bytes.next().expect("This file does not contain XFL");
     if *xfl != 0x0 {
