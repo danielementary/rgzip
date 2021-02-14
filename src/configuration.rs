@@ -114,6 +114,22 @@ fn decompress(config: Config) -> Result<(), Box<dyn Error>> {
     let filename = str::from_utf8(&filename)?;
 
     // read compressed blocks
+    let header = bytes.next().expect("This block does not contain an header");
+
+    let bfinal_set = header & 1 == 1;
+    let btype_0_set = header >> 1 & 1 == 1;
+    let btype_1_set = header >> 2 & 1 == 1;
+
+    if !bfinal_set {
+        panic!("This implementation only supports one block compressed files for now");
+    }
+
+    match (btype_0_set, btype_1_set) {
+        (false, false) => {} // no compression
+        (false, true) => {}  // compressed with fixed Huffman codes
+        (true, false) => {}  //compressed with dynamic Huffman codes
+        (true, true) => panic!("BTYPE is 11"),
+    }
 
     // read CRC32
 
